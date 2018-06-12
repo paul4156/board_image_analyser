@@ -12,8 +12,8 @@ foreach ($images as $image) {
     // TODO if needed
 
     // crop the region
-    $crop = 113;
-    $img2 = imagecrop($img, ['x' => 13, 'y' => 13, 'width' => 774, 'height' => $crop]);
+    $crop = 92;
+    $img2 = imagecrop($img, ['x' => 7, 'y' => 7, 'width' => 625, 'height' => $crop]);
     if ($img2 === false) {
         imagedestroy($img);
         print "crop failed\n";
@@ -85,7 +85,7 @@ foreach ($images as $image) {
             }
             if ($num_red > 50) {
                 $cell = 1;
-            } elseif ($num_blue > 50) {
+            } elseif ($num_blue > 20) {
                 $cell = 2;
             } else {
                 $cell = 0;
@@ -94,7 +94,85 @@ foreach ($images as $image) {
         }
     }
 
-    $file = fopen("$image.txt", 'w+');
+    if (!function_exists('countOccuranceByColumn')) {
+        function countOccuranceByColumn($column, $test) {
+            $occurance = 1;
+            global $rows, $columns, $cells;
+
+            for ($row = 1; $row < $rows; $row++) {
+                if ($cells[$column][$row] == $test) {
+                    $occurance++;
+
+                    // reached last row, start looking at next columns to the right
+                    if ($row + 1 == $rows) {
+                        $tmp_col = $column + 1;
+                        while ($tmp_col < $columns and $cells[$tmp_col][$row] == $test) {
+                            $occurance++;
+                            $tmp_col++;
+                        }
+                    }
+
+                    continue;
+                } else {
+                    break;
+                }
+            }
+
+            return $occurance;
+        }
+    }
+ 
+    if (!function_exists('addToArray')) {
+        function addToArray($key, &$array) {
+            if (!array_key_exists($key, $array)) {
+                $array[$key] = 1;
+            } else {
+                $array[$key]++;
+            }
+        }
+    }
+
+    $red_array = [];
+    $blue_array = [];
+
+    for ($col = 0; $col < $columns; $col++) {
+        $red = 0;
+        $blue = 0;
+
+        if ($cells[$col][0] == 1) {
+            //print "\n";
+            //print countOccuranceByColumn($col, 1);
+            //print "\n";
+            addToArray(countOccuranceByColumn($col, 1), $red_array);
+            continue;
+        } elseif ($cells[$col][0] == 2) {
+            //print "\n";
+            //print countOccuranceByColumn($col, 2);
+            //print "\n";
+            addToArray(countOccuranceByColumn($col, 2), $blue_array);
+            continue;
+        } else {
+            break;
+        }
+    }
+
+    if (!function_exists('printArray')) {
+        function printArray($array) {
+            foreach ($array as $key => $value) {
+                print "key = " . $key . " value = " . $value;
+                print "\n";
+            }
+        }
+    }
+
+    print $image . "\n";
+    print "Red:\n";
+    printArray($red_array);
+    print "Blue\n";
+    printArray($blue_array);
+    print "\n";
+
+    /*$file = fopen("$image.txt", 'w+');
     print "Results: \n";
     for ($row = 0; $row < $rows; $row++) {
         print " row " . ($row + 1) . " -- | ";
@@ -105,6 +183,6 @@ foreach ($images as $image) {
         print "|\n";
         fprintf($file, "\n");
     }
-    imagedestroy($img3);
+    imagedestroy($img3);*/
 }
 
